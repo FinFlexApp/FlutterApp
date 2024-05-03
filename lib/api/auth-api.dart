@@ -34,4 +34,18 @@ class AuthApiService{
     final response = await http.post(Uri.parse(url), headers: headers, body: json.encode(body));
     return response;
   }
+
+  static Future<http.Response> CheckToken(int userId, String token) async {
+    const url = '${ApiConfiguration.baseUrl}:${ApiConfiguration.port}/token';
+    final headers = {
+      'Content-Type': 'application/json',
+      'Authorization': token
+    };
+    final Map<String, dynamic> body = {
+      'user_id': userId
+    };
+
+    final response = await http.post(Uri.parse(url), headers: headers, body: json.encode(body));
+    return response;
+  }
 }

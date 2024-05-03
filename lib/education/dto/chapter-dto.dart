@@ -17,7 +17,7 @@ class ChapterDTO{
 
   factory ChapterDTO.fromJson(Map<String, dynamic> json) => ChapterDTO(
     chapterId: json['chapter_id'],
-    chapterScore: json['chapter_score'],
+    chapterScore: json['chapter_score'].toInt(),
     description: json['description'],
     imageSource: json['img_src'],
     passedTests: json['passed_tests'],
