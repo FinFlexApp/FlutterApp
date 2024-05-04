@@ -4,6 +4,8 @@ import 'package:animations/animations.dart';
 import 'package:finflex/api/tests-api.dart';
 import 'package:finflex/education/dto/test-dto.dart';
 import 'package:finflex/education/pages/test-proccess-page.dart';
+import 'package:finflex/handles/data-widgets/profile-data-widget.dart';
+import 'package:finflex/profile/dto/profile-app-data.dart';
 import 'package:finflex/styles/colors.dart';
 import 'package:finflex/styles/text-styles.dart';
 import 'package:flutter/material.dart';
@@ -12,8 +14,9 @@ import 'package:flutter/widgets.dart';
 class ChapterTestsPage extends StatefulWidget {
   final int chapterId;
   final String chapterDescription;
+  final Function refreshCallBack;
 
-  const ChapterTestsPage({super.key, required this.chapterId, required this.chapterDescription});
+  const ChapterTestsPage({super.key, required this.chapterId, required this.chapterDescription, required this.refreshCallBack});
 
   @override
   _ChapterTestsPageState createState() => _ChapterTestsPageState();
@@ -21,6 +24,7 @@ class ChapterTestsPage extends StatefulWidget {
 
 class _ChapterTestsPageState extends State<ChapterTestsPage>
     with SingleTickerProviderStateMixin {
+
   late AnimationController _controller;
   late Animation<double> _animation;
 
@@ -41,8 +45,10 @@ class _ChapterTestsPageState extends State<ChapterTestsPage>
     super.dispose();
   }
 
-  Future<List<TestDTO>> loadTests(
-      int chapterId, int userId, String token) async {
+  Future<List<TestDTO>> loadTests(int chapterId, ProfileData profileData) async {
+      var userId = profileData.userId!;
+      var token = profileData.token!;
+
     var request = await TestsApiService.GetChapterTests(
         chapterId, userId, token);
     List<dynamic> rawTestList = json.decode(request.body);
@@ -58,16 +64,23 @@ class _ChapterTestsPageState extends State<ChapterTestsPage>
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
-        appBar: AppBar(title: Text("Тесты")),
+        appBar: AppBar(
+          title: Text("Тесты"),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              widget.refreshCallBack();
+              Navigator.of(context).pop();
+            },
+          ),
+        ),
         body: Column(
           children: [
             Text(widget.chapterDescription, style: TextStyle(color: Colors.black),),
             Expanded(
               child: FutureBuilder(
                   future: loadTests(
-                      widget.chapterId,
-                      11,
-                      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMX0.00KV-iWi85eL-CZC4w5Ma2r0_dMw8ohjbjDkStIIXfQ'),
+                      widget.chapterId, AppProcessDataProvider.of(context)!.profileData),
                   builder: (context, snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Center(child: const CircularProgressIndicator());
@@ -80,7 +93,7 @@ class _ChapterTestsPageState extends State<ChapterTestsPage>
                             itemCount: snapshot.data!.length,
                             itemBuilder: (context, index) {
                               return TestCard(
-                                  testData: snapshot.data![index], testIndex: index);
+                                  testData: snapshot.data![index], testIndex: index, refreshCallBack: (){widget.refreshCallBack(); setState(() {});});
                             }),
                       );
                     }
@@ -96,20 +109,25 @@ class _ChapterTestsPageState extends State<ChapterTestsPage>
 class TestCard extends StatelessWidget {
   final TestDTO testData;
   final int testIndex;
+  final Function refreshCallBack;
   const TestCard(
-      {super.key, required this.testData, required this.testIndex});
+      {super.key, required this.testData, required this.testIndex, required this.refreshCallBack});
 
   void onTestClick(BuildContext context){
     Navigator.of(context).push(
       MaterialPageRoute(builder: 
-        (context)=>TestPage(testId: testData.testId)
+        (context)=>TestPage(testId: testData.testId, refreshCallBack: refreshCallBack)
       )
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    
+    if(!testData.isUnlocked){
+      return Container(
+        color: Colors.black,
+        child: Text('Тест ${testData.title} заблокирован, ты лох'));
+    }
     return Theme(
       data: Theme.of(context).copyWith(textTheme: CustomTextThemes.TestTextTheme),
       child: GestureDetector(

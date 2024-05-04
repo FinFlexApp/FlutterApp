@@ -4,4 +4,5 @@ class ApiConfiguration{
 }
 
 //http://10.0.2.2
+//http://82.148.28.160
 //http://localhost

@@ -3,8 +3,11 @@ import 'dart:convert';
 import 'package:finflex/api/chat-api.dart';
 import 'package:finflex/chat/dto/message-dto.dart';
 import 'package:finflex/handles/button-widgets/primary-button.dart';
+import 'package:finflex/handles/data-widgets/profile-data-widget.dart';
+import 'package:finflex/profile/dto/profile-app-data.dart';
 import 'package:finflex/styles/button-styles.dart';
 import 'package:finflex/styles/colors.dart';
+import 'package:finflex/styles/decorations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:grouped_list/grouped_list.dart';
@@ -20,7 +23,10 @@ class ChatBotPage extends StatefulWidget {
 class _chatState extends State<ChatBotPage> {
   List<MessageDTO> messagesList = [];
 
-  Future<List<MessageDTO>> loadChatHistory(int userId, String token) async {
+  Future<List<MessageDTO>> loadChatHistory(ProfileData profileData) async {
+    var userId = profileData.userId!;
+    var token = profileData.token!;
+
     var request = await ChatApiService.GetChatHistory(userId, token);
     List<dynamic> rawMessagesList = json.decode(request.body);
     List<MessageDTO> messagesList = [];
@@ -40,7 +46,7 @@ class _chatState extends State<ChatBotPage> {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: messagesList.isEmpty ? loadChatHistory(11, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMX0.00KV-iWi85eL-CZC4w5Ma2r0_dMw8ohjbjDkStIIXfQ') : Future.value(messagesList),
+        future: messagesList.isEmpty ? loadChatHistory(AppProcessDataProvider.of(context)!.profileData) : Future.value(messagesList),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const CircularProgressIndicator();
@@ -121,7 +127,10 @@ class _messageInputsState extends State<MessageInputsWidget> {
 
   _messageInputsState({required Function(MessageDTO) chatCallback}) : _chatCallback = chatCallback;
 
-  Future<MessageDTO> sendMessage(String message, int userId, String token) async {
+  Future<MessageDTO> sendMessage(String message, ProfileData profileData) async {
+    var userId = profileData.userId!;
+    var token = profileData.token!;
+
     var request = await ChatApiService.SendMessage(message, userId, token);
     var messageDTO = MessageDTO.fromJson(json.decode(request.body));
     return messageDTO;
@@ -129,8 +138,7 @@ class _messageInputsState extends State<MessageInputsWidget> {
 
   void sendMessageInvoker() async {
     _chatCallback(MessageDTO(date: DateTime.now(), message: _controller.text, isReply: false));
-    var result = await sendMessage(_controller.text, 11,
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMX0.00KV-iWi85eL-CZC4w5Ma2r0_dMw8ohjbjDkStIIXfQ');
+    var result = await sendMessage(_controller.text, AppProcessDataProvider.of(context)!.profileData);
     _controller.text = '';
     _chatCallback(result);
   }
@@ -145,10 +153,7 @@ class _messageInputsState extends State<MessageInputsWidget> {
             child: TextField(
               style: Theme.of(context).textTheme.labelLarge,
               controller: _controller,
-              decoration: const InputDecoration(
-                labelText: 'Текст!!!',
-                hintText: 'Напишите сообщение...',
-                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(10)))),
+              decoration: CustomDecorations.MainInputDecoration('Напишите сообщение...')
               ),
           ),
           const SizedBox(width: 20),

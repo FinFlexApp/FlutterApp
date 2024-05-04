@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:finflex/education/dto/submit-test-data.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:finflex/api/api-config.dart';
@@ -59,6 +60,23 @@ class TestsApiService{
     };
     final Map<String, dynamic> body = {
       'question_id': questionId
+    };
+
+    final response = await http.post(Uri.parse(url), headers: headers, body: json.encode(body));
+    return response;
+  }
+
+   // Запрос на получение вопроса по id
+  static Future<http.Response> SendResults(SubmitTestData data, String token) async {
+    const url = '${ApiConfiguration.baseUrl}:${ApiConfiguration.port}/test/sendAnswers';
+    final headers = {
+      'Authorization': token,
+      'Content-Type': 'application/json',
+    };
+    final Map<String, dynamic> body = {
+      'user_id': data.userId,
+      'test_id': data.testId,
+      'submitted_answers': AnswerSubmition.ToListMap(data.submittedAnswers)
     };
 
     final response = await http.post(Uri.parse(url), headers: headers, body: json.encode(body));

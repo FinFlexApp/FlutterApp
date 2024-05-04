@@ -92,4 +92,44 @@ class CustomTextThemes{
     ),
 
   );
+
+  static const ChapterTextTheme = TextTheme(
+    headlineLarge: TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 42,
+      color: Color.fromARGB(255, 255, 255, 255),
+      fontWeight: FontWeight.bold
+    ),
+    titleMedium: TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 20,
+      color: Color.fromARGB(255, 255, 255, 255),
+      fontWeight: FontWeight.bold
+    ),
+    bodyMedium: TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 20,
+      color: Color.fromARGB(255, 255, 255, 255),
+      fontWeight: FontWeight.normal
+    ),
+    labelLarge: TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 14,
+      color: Color.fromARGB(255, 255, 255, 255),
+      fontWeight: FontWeight.w900
+    ),
+    labelMedium: TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 14,
+      color: Color.fromARGB(255, 255, 255, 255),
+      fontWeight: FontWeight.bold
+    ),
+    displayMedium: TextStyle(
+      fontFamily: 'Inter',
+      fontSize: 20,
+      color: Colors.black,
+      fontWeight: FontWeight.bold
+    ),
+
+  );
 }

@@ -5,7 +5,11 @@ import 'package:finflex/api/tests-api.dart';
 import 'package:finflex/education/dto/answer-dto.dart';
 import 'package:finflex/education/dto/question-dto.dart';
 import 'package:finflex/education/dto/question-meta-dto.dart';
+import 'package:finflex/education/dto/results-dto.dart';
 import 'package:finflex/education/dto/submit-test-data.dart';
+import 'package:finflex/education/pages/test-results-page.dart';
+import 'package:finflex/handles/data-widgets/profile-data-widget.dart';
+import 'package:finflex/profile/dto/profile-app-data.dart';
 import 'package:finflex/styles/button-styles.dart';
 import 'package:finflex/styles/colors.dart';
 import 'package:flutter/cupertino.dart';
@@ -14,8 +18,9 @@ import 'package:flutter/widgets.dart';
 
 class TestPage extends StatefulWidget{
   final int testId;
+  final Function refreshCallBack;
 
-  TestPage({super.key, required this.testId});
+  TestPage({super.key, required this.testId, required this.refreshCallBack});
 
   @override
   State<StatefulWidget> createState(){
@@ -30,6 +35,11 @@ class _testPageState extends State<TestPage>{
   List<QuestionDTO> questionsDataList = [];
   List<Widget> pageViewWidgets = [];
   PageController pageController = PageController();
+  int pageIndex = 0;
+
+  void initState(){
+    submitTestData.testId = widget.testId;
+  }
 
   void applyAnswerSelection(AnswerSubmition submitData){
     for(int i = 0; i < submitTestData.submittedAnswers.length; i++){
@@ -50,7 +60,9 @@ class _testPageState extends State<TestPage>{
   }
 
   Future<List<QuestionMetaDTO>> loadQuestionsList(
-      int testId, String token) async {
+      int testId, ProfileData profileData) async {
+    var token = profileData.token!;
+
     var request = await TestsApiService.getQuestionsList(
         testId, token);
     List<dynamic> rawQuestionMetaList = json.decode(request.body);
@@ -62,7 +74,9 @@ class _testPageState extends State<TestPage>{
     return questionMetaList;
   }
 
-  Future<List<QuestionDTO>> loadQuestionsData(List<QuestionMetaDTO> metaList, String token) async {
+  Future<List<QuestionDTO>> loadQuestionsData(List<QuestionMetaDTO> metaList, ProfileData profileData) async {
+    var token = profileData.token!;
+
     List<QuestionDTO> questionDataList = [];
     for(int i = 0; i < metaList.length; i++){
       var request = await TestsApiService.getQuestion(metaList[i].questionId, token);
@@ -73,9 +87,12 @@ class _testPageState extends State<TestPage>{
     return questionDataList;
   }
 
-  Future<void> loadAllTestData(int testId, String token) async{
-    questionsMetaList = await loadQuestionsList(testId, token);
-    questionsDataList = await loadQuestionsData(questionsMetaList, token);
+  Future<void> loadAllTestData(int testId, ProfileData profileData) async{
+    if(questionsDataList.isEmpty && questionsMetaList.isEmpty){
+      questionsMetaList = await loadQuestionsList(testId, profileData);
+      questionsDataList = await loadQuestionsData(questionsMetaList, profileData);
+    }
+    
     
     initPageViewWidgets();
   }
@@ -85,6 +102,19 @@ class _testPageState extends State<TestPage>{
     for(int i = 0; i < questionsDataList.length; i++){
       pageViewWidgets.add(QuestionWidget(questionData: questionsDataList[i], applyHandler: applyAnswerSelection, submition: checkForSubmition(questionsDataList[i].questionId)));
     }
+    pageViewWidgets.add(TestConfirmationWidget(questionsAnswered: submitTestData.submittedAnswers.length, questionsCount: questionsDataList.length));
+  }
+
+  Future<void> sendResults(SubmitTestData data, ProfileData profileData) async{
+    var token = profileData.token!;
+
+    var request = await TestsApiService.SendResults(data, token);
+    var results = TestResultsDTO.fromJson(json.decode(request.body));
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => TestResultsPage(data: results, refreshCallBack: widget.refreshCallBack)),
+    );
   }
 
   AnswerSubmition? checkForSubmition(int questionId){
@@ -103,18 +133,100 @@ class _testPageState extends State<TestPage>{
     }
   }
 
+  void swipePage(bool direction){
+    setState(() {
+      if(direction){
+        pageController.nextPage(duration: Duration(milliseconds: 500), curve: Curves.ease);
+        pageIndex++;
+        if(pageIndex > pageViewWidgets.length - 1) pageIndex = pageViewWidgets.length - 1;
+      }
+      else{
+        pageController.previousPage(duration: Duration(milliseconds: 500), curve: Curves.ease);
+        pageIndex--;
+        if(pageIndex < 0) pageIndex = 0;
+      }
+    });
+  }
+
+  void selectPage(int pageIndex) async{
+    await pageController.animateToPage(pageIndex, duration: Duration(milliseconds: 500), curve: Curves.ease);
+    setState(() {
+      this.pageIndex = pageIndex;
+    });
+  }
+
+  Widget showContextButtons(){
+    if (questionsDataList.isNotEmpty && pageController.hasClients){
+      if(pageIndex < pageViewWidgets.length - 1){
+        return Container(
+            height: 100,
+            padding: EdgeInsets.all(20),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: ElevatedButton(
+                  onPressed: (){ swipePage(false); },
+                  child: Text("Назад"),
+                  style: ButtonStyles.mainButtonStyle
+                  )),
+                const SizedBox(width: 20),
+                Expanded(child: ElevatedButton(
+                  onPressed: (){ swipePage(true); },
+                  child: Text("Далее"),
+                  style: ButtonStyles.mainButtonStyle
+                  ))
+              ],
+            ),
+          );
+      }
+      else{
+        return Container(
+            height: 100,
+            padding: EdgeInsets.all(20),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: ElevatedButton(
+                  onPressed: () {swipePage(false);},
+                  child: Text("Назад"),
+                  style: ButtonStyles.mainButtonStyle
+                  )),
+                const SizedBox(width: 20),
+                Expanded(child: ElevatedButton(
+                  onPressed: (){
+                    sendResults(submitTestData, AppProcessDataProvider.of(context)!.profileData);
+                  },
+                  child: Text("Отправить результаты"),
+                  style: ButtonStyles.mainButtonStyle
+                  ))
+              ],
+            ),
+          );
+    }
+    }
+    else return Container(child: Text("Не загружено!"));
+  }
+
   @override
   Widget build(BuildContext context) {
+    submitTestData.userId = AppProcessDataProvider.of(context)!.profileData.userId!;
     return SafeArea(
-      child: Container(
-        child: Column(
-          children: [
-            Container(
-              child: Row(
+      child: FutureBuilder(
+        future: loadAllTestData(widget.testId, AppProcessDataProvider.of(context)!.profileData),
+        builder: (context, snapshot) {
+          return Column(
+            children: [
+              Row(
                 children: [
-                  ElevatedButton(onPressed: (){setState(() {
-
-                  });}, child: Container(child: SizedBox(height: 50, width: 50)),),
+                  ElevatedButton(
+                    onPressed: (){ 
+                      showModalBottomSheet(
+                        
+                        backgroundColor: Colors.transparent,
+                        context: context,
+                        builder: (context) => TestModalSheet(questionsMeta: questionsMetaList, submitTestData: submitTestData, pageSelector: selectPage));
+                    }, 
+                    child: Container(child: SizedBox(height: 50, width: 50)),),
                   Expanded(child: Container(
                     padding: EdgeInsets.all(5),
                     decoration: const ShapeDecoration(
@@ -136,47 +248,64 @@ class _testPageState extends State<TestPage>{
                       ],
                     )
                   )),
-                  ElevatedButton(onPressed: (){setState(() {
-
-                  });}, child: Container(child: SizedBox(height: 50, width: 50)),),
+                  ElevatedButton(onPressed: (){
+                    Navigator.pop(context);
+                  }, child: Container(child: SizedBox(height: 50, width: 50)),),
                 ],
               ),
-            ),
-            FutureBuilder(
-              future: loadAllTestData(widget.testId, 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMX0.00KV-iWi85eL-CZC4w5Ma2r0_dMw8ohjbjDkStIIXfQ'),
-              builder: (context, snapshot) {
-                return Expanded(
-                  child: PageView(
-                    physics: NeverScrollableScrollPhysics(),
-                    controller: pageController,
-                    children: pageViewWidgets,
-                  ),
-                );
-              }
-            ),
-            Container(
-              height: 100,
-              padding: EdgeInsets.all(20),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(child: ElevatedButton(
-                    onPressed: (){pageController.previousPage(duration: Duration(milliseconds: 500), curve: Curves.ease);},
-                    child: Text("Назад"),
-                    style: ButtonStyles.mainButtonStyle
-                    )),
-                  const SizedBox(width: 20),
-                  Expanded(child: ElevatedButton(
-                    onPressed: (){pageController.nextPage(duration: Duration(milliseconds: 500), curve: Curves.ease);},
-                    child: Text("Далее"),
-                    style: ButtonStyles.mainButtonStyle
-                    ))
-                ],
+              Expanded(
+                child: PageView(
+                  physics: NeverScrollableScrollPhysics(),
+                  controller: pageController,
+                  children: pageViewWidgets,
+                ),
               ),
-            )
-          ],
-        ),
+              showContextButtons()
+            ],
+          );
+        }
       ),
+    );
+  }
+
+}
+
+class TestConfirmationWidget extends StatefulWidget{
+  int questionsAnswered;
+  int questionsCount;
+
+  TestConfirmationWidget({super.key, required this.questionsAnswered, required this.questionsCount});
+
+  @override
+  State<StatefulWidget> createState() => _testConfirmationState();
+  
+}
+
+class _testConfirmationState extends State<TestConfirmationWidget>{
+
+  Widget summaryMessageBuilder(){
+    if(widget.questionsAnswered == widget.questionsCount){
+      return Column(
+        children: [
+          Text("Вы ответили на все вопросы!"),
+          Text("Хотите тест?")
+        ],
+      );
+    }
+    else{
+      return Column(
+        children: [
+          Text('Вы ответили на ${widget.questionsAnswered} вопросов из ${widget.questionsCount}'),
+          Text('Вы уверены, что хотите завершить тест?')
+        ],
+      );
+    }
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: summaryMessageBuilder(),
     );
   }
 
@@ -355,7 +484,7 @@ class AnswerWidget extends StatelessWidget{
               decoration: ShapeDecoration(
                 color: isSelected ? Colors.white : Colors.black,
                 shape: ContinuousRectangleBorder(
-                  borderRadius: BorderRadius.circular(20)
+                  borderRadius: isCheckbox ? BorderRadius.circular(10) : BorderRadius.circular(1000)
                 )
               ),
               child: SizedBox(height: 30, width: 30),
@@ -365,4 +494,118 @@ class AnswerWidget extends StatelessWidget{
     );
   }
 
+}
+
+class TestModalSheet extends StatelessWidget{
+  final List<QuestionMetaDTO> questionsMeta;
+  final SubmitTestData submitTestData;
+  final Function(int) pageSelector;
+
+  TestModalSheet({super.key, required this.questionsMeta, required this.submitTestData, required this.pageSelector});
+  
+  bool isAnswered(int index){
+    for(int i = 0; i < submitTestData.submittedAnswers.length; i++){
+      if(submitTestData.submittedAnswers[i].questionId == questionsMeta[index].questionId) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.5,
+      builder: (context, builder) => Container(
+        padding: EdgeInsets.all(20),
+        decoration: ShapeDecoration(
+          shape: ContinuousRectangleBorder(
+            borderRadius: BorderRadius.only(topLeft: Radius.circular(40), topRight: Radius.circular(40)),
+          ),
+          color: Colors.white
+        ),
+        child: Column(
+          children: [
+            Text("Вопросы теста", style: TextStyle(fontSize: 20, color: Colors.black)),
+            Expanded(
+              child: Scrollbar(
+                thickness: 5,
+                child: ListView.builder(
+                  itemCount: questionsMeta.length,
+                  itemBuilder: (context, index) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      child: Container(
+                        padding: EdgeInsets.all(10),
+                        decoration: ShapeDecoration(
+                          shape: ContinuousRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(30)),
+                            side: BorderSide(width: 2)
+                          )
+                        ),
+                        child: Row(
+                          children: [
+                            // Номер вопроса
+                            isAnswered(index) ?
+                            Container(
+                              padding: EdgeInsets.all(10),
+                              decoration: ShapeDecoration(
+                                color: Colors.green,
+                                shape: ContinuousRectangleBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(30))
+                                )
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(questionsMeta[index].questionSequence.toString(), style: TextStyle(color: Colors.black)),
+                                  SizedBox(width: 10),
+                                  Image.asset('assets/icons/crown-icon.png')
+                                ],
+                              ),
+                            ) :
+                            Container(
+                              padding: EdgeInsets.all(10),
+                              decoration: ShapeDecoration(
+                                color: const Color.fromARGB(255, 129, 166, 131),
+                                shape: ContinuousRectangleBorder(
+                                  borderRadius: BorderRadius.all(Radius.circular(30))
+                                )
+                              ),
+                              child: Row(
+                                children: [
+                                  Text(questionsMeta[index].questionSequence.toString(), style: TextStyle(color: Colors.black)),
+                                  SizedBox(width: 10),
+                                  Image.asset('assets/icons/test-icon.png')
+                                ],
+                              ),
+                            ),
+                            // Текст вопроса
+                            Expanded(
+                              child: Container(
+                                padding: EdgeInsets.all(10),
+                                child: Text(questionsMeta[index].questionText, style: TextStyle(color: Colors.black)),
+                              ),
+                            ),
+                            ElevatedButton(
+                              style: ButtonStyles.mainButtonStyle,
+                              onPressed: (){
+                                pageSelector(index);
+                                Navigator.pop(context);
+                              },
+                              child: Text("Перейти"))
+                          ],
+                        )
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+          ],
+        )
+      ),
+    );
+  }
+
+  
 }

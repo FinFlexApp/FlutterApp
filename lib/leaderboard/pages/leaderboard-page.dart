@@ -3,8 +3,10 @@ import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:finflex/api/leaderboard-api.dart';
 import 'package:finflex/api/news-api.dart';
-import 'package:finflex/leaderbboard/dto/leaderboard-dto.dart';
+import 'package:finflex/handles/data-widgets/profile-data-widget.dart';
+import 'package:finflex/leaderboard/dto/leaderboard-dto.dart';
 import 'package:finflex/news/dto/news-dto.dart';
+import 'package:finflex/profile/dto/profile-app-data.dart';
 import 'package:finflex/styles/colors.dart';
 import 'package:finflex/styles/text-styles.dart';
 import 'package:flutter/material.dart';
@@ -12,7 +14,9 @@ import 'package:flutter/material.dart';
 class LeaderBoardPage extends StatelessWidget {
   const LeaderBoardPage({super.key});
 
-  Future<List<LeaderDTO>> loadLeaders(int count, String token) async {
+  Future<List<LeaderDTO>> loadLeaders(int count, ProfileData profileData) async {
+    var token = profileData.token!;
+
     var request = await LeaderboardApiService.GetLeaders(count, token);
     List<dynamic> rawLeadersList = json.decode(request.body);
     List<LeaderDTO> leadersList = [];
@@ -26,8 +30,7 @@ class LeaderBoardPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: loadLeaders(5,
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMX0.00KV-iWi85eL-CZC4w5Ma2r0_dMw8ohjbjDkStIIXfQ'),
+        future: loadLeaders(5, AppProcessDataProvider.of(context)!.profileData),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const CircularProgressIndicator();
@@ -99,6 +102,9 @@ class LeaderCard extends StatelessWidget {
               SizedBox(width: 10),
               Container(
                 child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('${leaderData.surName} ${leaderData.firstName}',
                         style: Theme.of(context)
@@ -191,6 +197,9 @@ class LeaderCard extends StatelessWidget {
               SizedBox(width: 10),
               Container(
                 child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('${leaderData.surName} ${leaderData.firstName}',
                         style: Theme.of(context)
@@ -284,6 +293,9 @@ class LeaderCard extends StatelessWidget {
               SizedBox(width: 10),
               Container(
                 child: Column(
+                  mainAxisSize: MainAxisSize.max,
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('${leaderData.surName} ${leaderData.firstName}',
                         style: Theme.of(context)

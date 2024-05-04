@@ -17,4 +17,20 @@ class ProfileApiService{
     final response = await http.post(Uri.parse(url), headers: headers, body: json.encode(body));
     return response;
   }
+
+  static Future<http.Response> ChangePassword(String oldPassword, String newPassword, int userId, String token) async {
+    const url = '${ApiConfiguration.baseUrl}:${ApiConfiguration.port}/users/changePassword';
+    final headers = {
+      'Authorization': token,
+      'Content-Type': 'application/json',
+    };
+    final Map<String, dynamic> body = {
+      'user_id': userId,
+      'oldPassword': oldPassword,
+      'newPassword': newPassword
+    };
+
+    final response = await http.post(Uri.parse(url), headers: headers, body: json.encode(body));
+    return response;
+  }
 }

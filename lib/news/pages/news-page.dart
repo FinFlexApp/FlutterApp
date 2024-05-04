@@ -2,14 +2,18 @@ import 'dart:convert';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:finflex/api/news-api.dart';
+import 'package:finflex/handles/data-widgets/profile-data-widget.dart';
 import 'package:finflex/news/dto/news-dto.dart';
+import 'package:finflex/profile/dto/profile-app-data.dart';
 import 'package:finflex/styles/text-styles.dart';
 import 'package:flutter/material.dart';
 
 class NewsPage extends StatelessWidget {
   const NewsPage({super.key});
 
-  Future<List<NewsDTO>> loadNews(String token) async {
+  Future<List<NewsDTO>> loadNews(ProfileData profileData) async {
+    var token = profileData.token!;
+
     var request = await NewsApiService.GetNews(token);
     List<dynamic> rawNewsList = json.decode(request.body);
     List<NewsDTO> newsList = [];
@@ -23,7 +27,7 @@ class NewsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
-        future: loadNews('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoxMX0.00KV-iWi85eL-CZC4w5Ma2r0_dMw8ohjbjDkStIIXfQ'),
+        future: loadNews(AppProcessDataProvider.of(context)!.profileData),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const CircularProgressIndicator();
