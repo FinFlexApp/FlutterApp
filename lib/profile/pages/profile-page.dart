@@ -10,9 +10,11 @@ import 'package:finflex/profile/dto/profile-dto.dart';
 import 'package:finflex/profile/profile-handles/profile-prefs-handlers.dart';
 import 'package:finflex/styles/button-styles.dart';
 import 'package:finflex/styles/decorations.dart';
+import 'package:finflex/styles/text-styles.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_svg/svg.dart';
 
 class ProfilePage extends StatelessWidget{
 
@@ -68,6 +70,7 @@ class ProfileInfoWidget extends StatelessWidget{
       children: [
         Container(
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CachedNetworkImage(
                 height: 150,
@@ -87,24 +90,29 @@ class ProfileInfoWidget extends StatelessWidget{
               Container(
                 padding: EdgeInsets.all(10),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(profileData.firstName),
-                    Text(profileData.surName),
+                    Text('@${profileData.nickname}', style: Theme.of(context).textTheme.labelMedium),
+                    Wrap(
+                      crossAxisAlignment: WrapCrossAlignment.start,
+                      children: [
+                        Text(profileData.firstName, style: Theme.of(context).textTheme.labelLarge),
+                        SizedBox(width: 10),
+                        Text(profileData.surName, style: Theme.of(context).textTheme.labelLarge),
+                      ],
+                    ),
+                    SizedBox(height: 10),
                     Container(
                       padding: EdgeInsets.all(5),
-                      decoration: ShapeDecoration(
-                          color: Colors.white,
-                          shape: ContinuousRectangleBorder(
-                              borderRadius: BorderRadius.all(
-                                  Radius.circular(30)))),
-                      child: Row(
+                      decoration: CustomDecorations.progressDataDecoration,
+                      child: Wrap(
                         children: [
                           Text(profileData.score.toString(),
                               style: Theme.of(context)
                                   .textTheme
-                                  .displayLarge),
+                                  .displayMedium),
                           SizedBox(width: 10),
-                          Image.asset('assets/icons/crown-icon.png')
+                          SvgPicture.asset('assets/icons/crown-icon.svg', height: 25)
                         ],
                       ),
                     ),
@@ -128,7 +136,7 @@ class ProfileInfoWidget extends StatelessWidget{
                 ),
               SizedBox(height: 20),
               ElevatedButton(
-                style: ButtonStyles.mainButtonStyle,
+                style: ButtonStyles.mainButtonStyle.copyWith(backgroundColor: MaterialStatePropertyAll(Colors.red)),
                 onPressed: (){exitProfile(context);},
                 child: Padding(
                   padding: const EdgeInsets.all(20),
@@ -157,7 +165,10 @@ class _changePasswordState extends State<ChangePasswordForm>{
   bool hiddenOldPassword = true;
   bool hiddenNewPassword = true;
 
-  bool validationFailed = false;
+  String validationMessage = '';
+
+  bool newPasswordValidated = true;
+  bool oldPasswordValidated = true;
   
 
   Future<bool> changePassword(String oldPassword, String newPassword, ProfileData profileData) async{
@@ -166,21 +177,35 @@ class _changePasswordState extends State<ChangePasswordForm>{
 
     var request = await ProfileApiService.ChangePassword(oldPassword, newPassword, userId, token);
     var result = json.decode(request.body);
+    if(result['check'] != null)
+      return result['check'];
+    else return false;
+  }
 
-    return result['check'];
+  String validatePasswords(String oldPassword, String newPassword){
+    if(oldPassword.isEmpty) return "Ошибка валидации : не введен старый пароль";
+    if(oldPassword.length < 8) return "Ошибка валидации : старый пароль содержит менее 8 символов";
+    if(newPassword.isEmpty) return "Ошибка валидации : не введен новый пароль";
+    if(newPassword.length < 8) return "Ошибка валидации : новый пароль содержит менее 8 символов";
+
+    return '';
   }
 
   void changePasswordHandler(String oldPassword, String newPassword, ProfileData profileData, BuildContext context) async{
+    
+    validationMessage = validatePasswords(oldPassword, newPassword);
+    if(validationMessage.isNotEmpty) return;
+
     var result = await changePassword(oldPassword, newPassword, profileData);
 
     if(result){
-      validationFailed = false;
+      validationMessage = '';
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Пароль изменен!")));
     }
     else{
       setState(() {
-        validationFailed = true;
+        validationMessage = 'Ошибка сервера : введен неверный старый пароль';
       });
     }
   }
@@ -189,53 +214,62 @@ class _changePasswordState extends State<ChangePasswordForm>{
   Widget build(BuildContext context) {
     return Dialog(
       child: Container(
-        height: 300,
+        decoration: CustomDecorations.modalShapeDecoration,
+        padding: EdgeInsets.all(20),
+        height: 350,
         width: 400,
         child: Column(
           children: [
-            Expanded(
-              child: Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: oldPasswordController,
-                        decoration: CustomDecorations.MainInputDecoration('Старый пароль'),
-                        obscureText: hiddenOldPassword,
-                      ),
+            Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      style: CustomTextThemes.InputTextStyle,
+                      controller: oldPasswordController,
+                      decoration: CustomDecorations.MainInputDecoration('Старый пароль', oldPasswordValidated),
+                      obscureText: hiddenOldPassword,
                     ),
-                    ElevatedButton(
-                      onPressed: (){
-                      setState(() {
-                        hiddenOldPassword = !hiddenOldPassword;
-                      });
-                      },
-                      child: hiddenOldPassword ? Image.asset('assets/icons/bot-nav-icon.png') : Image.asset('assets/icons/crown-icon.png')
-                      )
-                  ],
-              ),
+                  ),
+                  ElevatedButton(
+                    style: ButtonStyles.visibilityButtonStyle,
+                    onPressed: (){
+                    setState(() {
+                      hiddenOldPassword = !hiddenOldPassword;
+                    });
+                    },
+                    child: hiddenOldPassword ? Icon(Icons.visibility_off) : Icon(Icons.visibility)
+                    )
+                ],
             ),
-            Expanded(
-              child: Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: newPasswordController,
-                        decoration: CustomDecorations.MainInputDecoration('Новый пароль'),
-                        obscureText: hiddenNewPassword,
-                      ),
+            SizedBox(height: 20),
+            Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      style: CustomTextThemes.InputTextStyle,
+                      controller: newPasswordController,
+                      decoration: CustomDecorations.MainInputDecoration('Новый пароль', newPasswordValidated),
+                      obscureText: hiddenNewPassword,
                     ),
-                    ElevatedButton(
-                      onPressed: (){
-                      setState(() {
-                        hiddenNewPassword = !hiddenNewPassword;
-                      });
-                      },
-                      child: hiddenNewPassword ? Image.asset('assets/icons/bot-nav-icon.png') : Image.asset('assets/icons/crown-icon.png')
-                      )
-                  ],
-              ),
+                  ),
+                  ElevatedButton(
+                    style: ButtonStyles.visibilityButtonStyle,
+                    onPressed: (){
+                    setState(() {
+                      hiddenNewPassword = !hiddenNewPassword;
+                    });
+                    },
+                    child: hiddenNewPassword ? Icon(Icons.visibility_off) : Icon(Icons.visibility)
+                    )
+                ],
             ),
-      
+            SizedBox(height: 10),
+            validationMessage.isNotEmpty ? Container(
+              padding: EdgeInsets.all(10),
+              decoration: CustomDecorations.progressDataDecoration,
+              child: Text(validationMessage, style: TextStyle(color: Colors.red),),
+            ) : Container(),
+            SizedBox(height: 10),
             ElevatedButton(
                   style: ButtonStyles.mainButtonStyle,
                   onPressed: (){ changePasswordHandler(oldPasswordController.text, newPasswordController.text, AppProcessDataProvider.of(context)!.profileData, context); },

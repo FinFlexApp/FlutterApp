@@ -65,13 +65,14 @@ class NewsCard extends StatelessWidget {
         color: Colors.blue,
         shape: ContinuousRectangleBorder(
           borderRadius: BorderRadius.circular(40),
+          side: BorderSide(width: 2)
         ),
         child: Padding(
             padding: const EdgeInsets.all(15),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(newsData.date, style: Theme.of(context).textTheme.bodySmall),
+                Text(newsData.date, style: Theme.of(context).textTheme.labelSmall),
                 const SizedBox(height: 10),
                 Text(newsData.title, style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 10),
@@ -83,13 +84,14 @@ class NewsCard extends StatelessWidget {
                       height: 200,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(width: 2),
                         image: DecorationImage(image: imageProvider, fit: BoxFit.fitWidth)
                       )
                       
                     );
                   }),
                   const SizedBox(height: 10),
-                Text(newsData.text)
+                Text(newsData.text, style: Theme.of(context).textTheme.bodyMedium)
               ],
             )));
   }

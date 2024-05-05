@@ -12,6 +12,7 @@ import 'package:finflex/handles/data-widgets/profile-data-widget.dart';
 import 'package:finflex/profile/dto/profile-app-data.dart';
 import 'package:finflex/styles/button-styles.dart';
 import 'package:finflex/styles/colors.dart';
+import 'package:finflex/styles/themes.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -113,7 +114,7 @@ class _testPageState extends State<TestPage>{
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => TestResultsPage(data: results, refreshCallBack: widget.refreshCallBack)),
+      MaterialPageRoute(builder: (context) => Theme(data: CustomThemes.resultsTheme, child: TestResultsPage(data: results, refreshCallBack: widget.refreshCallBack))),
     );
   }
 
@@ -204,66 +205,80 @@ class _testPageState extends State<TestPage>{
           );
     }
     }
-    else return Container(child: Text("Не загружено!"));
+    else return Container(child: CircularProgressIndicator());
   }
 
   @override
   Widget build(BuildContext context) {
     submitTestData.userId = AppProcessDataProvider.of(context)!.profileData.userId!;
     return SafeArea(
-      child: FutureBuilder(
-        future: loadAllTestData(widget.testId, AppProcessDataProvider.of(context)!.profileData),
-        builder: (context, snapshot) {
-          return Column(
-            children: [
-              Row(
-                children: [
-                  ElevatedButton(
-                    onPressed: (){ 
-                      showModalBottomSheet(
-                        
-                        backgroundColor: Colors.transparent,
-                        context: context,
-                        builder: (context) => TestModalSheet(questionsMeta: questionsMetaList, submitTestData: submitTestData, pageSelector: selectPage));
-                    }, 
-                    child: Container(child: SizedBox(height: 50, width: 50)),),
-                  Expanded(child: Container(
-                    padding: EdgeInsets.all(5),
-                    decoration: const ShapeDecoration(
-                        color: ColorStyles.progressBarColor,
-                        shape: ContinuousRectangleBorder(
-                          side: BorderSide(width: 2),
-                          borderRadius: BorderRadius.all(Radius.circular(60))
-                        )
-                      ),
-                    child: Stack(
-                      children: [
-                        LinearProgressIndicator(
-                        backgroundColor: ColorStyles.progressBarColor,
-                        value: calcProgressBar(),
-                        minHeight: 50,
-                        borderRadius: BorderRadius.all(Radius.circular(20)),
+      child: Container(
+        color: ColorStyles.mainBackgroundColor,
+        padding: EdgeInsets.all(10),
+        child: FutureBuilder(
+          future: loadAllTestData(widget.testId, AppProcessDataProvider.of(context)!.profileData),
+          builder: (context, snapshot) {
+            return Column(
+              children: [
+                Row(
+                  children: [
+                    ElevatedButton(
+                      onPressed: (){ 
+                        showModalBottomSheet(
+                          
+                          backgroundColor: Colors.transparent,
+                          context: context,
+                          builder: (context) => TestModalSheet(questionsMeta: questionsMetaList, submitTestData: submitTestData, pageSelector: selectPage));
+                      },
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.transparent),
+                      child: Container(
+                        height: 75,
+                        width: 75,
+                        child: Image.asset('assets/icons/menu-icon.png'))),
+                    Expanded(child: Container(
+                      padding: EdgeInsets.all(5),
+                      decoration: const ShapeDecoration(
+                          color: ColorStyles.progressBarColor,
+                          shape: ContinuousRectangleBorder(
+                            side: BorderSide(width: 2),
+                            borderRadius: BorderRadius.all(Radius.circular(60))
+                          )
                         ),
-                        Center(child: Text('${submitTestData.submittedAnswers.length}/${questionsDataList.length}', style: Theme.of(context).textTheme.headlineLarge))
-                      ],
-                    )
-                  )),
-                  ElevatedButton(onPressed: (){
-                    Navigator.pop(context);
-                  }, child: Container(child: SizedBox(height: 50, width: 50)),),
-                ],
-              ),
-              Expanded(
-                child: PageView(
-                  physics: NeverScrollableScrollPhysics(),
-                  controller: pageController,
-                  children: pageViewWidgets,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          LinearProgressIndicator(
+                          backgroundColor: ColorStyles.progressBarColor,
+                          value: calcProgressBar(),
+                          minHeight: 50,
+                          borderRadius: BorderRadius.all(Radius.circular(20)),
+                          ),
+                          Center(child: Text('${submitTestData.submittedAnswers.length}/${questionsDataList.length}', style: Theme.of(context).textTheme.headlineLarge))
+                        ],
+                      )
+                    )),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.transparent),
+                      onPressed: (){
+                      Navigator.pop(context);
+                    }, child: Container(
+                        height: 75,
+                        width: 75,
+                        child: Image.asset('assets/icons/close-icon.png'))),
+                  ],
                 ),
-              ),
-              showContextButtons()
-            ],
-          );
-        }
+                Expanded(
+                  child: PageView(
+                    physics: NeverScrollableScrollPhysics(),
+                    controller: pageController,
+                    children: pageViewWidgets,
+                  ),
+                ),
+                showContextButtons()
+              ],
+            );
+          }
+        ),
       ),
     );
   }
@@ -287,16 +302,20 @@ class _testConfirmationState extends State<TestConfirmationWidget>{
     if(widget.questionsAnswered == widget.questionsCount){
       return Column(
         children: [
-          Text("Вы ответили на все вопросы!"),
-          Text("Хотите тест?")
+          Image.asset('assets/images/answered-test-image.png'),
+          SizedBox(height: 30),
+          Center(child: Text("Вы ответили на все вопросы!", style: Theme.of(context).textTheme.titleMedium)),
+          Center(child: Text("Хотите завершить тест?", style: Theme.of(context).textTheme.bodyMedium))
         ],
       );
     }
     else{
       return Column(
         children: [
-          Text('Вы ответили на ${widget.questionsAnswered} вопросов из ${widget.questionsCount}'),
-          Text('Вы уверены, что хотите завершить тест?')
+          Image.asset('assets/images/thinking-image.png'),
+          SizedBox(height: 30),
+          Center(child: Text('Вы ответили на ${widget.questionsAnswered} вопросов из ${widget.questionsCount}', style: Theme.of(context).textTheme.titleMedium)),
+          Center(child: Text('Вы уверены, что хотите завершить тест?', style: Theme.of(context).textTheme.bodyMedium))
         ],
       );
     }
@@ -341,7 +360,8 @@ class _questionWidgetState extends State<QuestionWidget>{
             ),
             child: Column(
               children: [
-                Text(widget.questionData.questionText, style: Theme.of(context).textTheme.displayLarge),
+                Text(widget.questionData.questionText, style: Theme.of(context).textTheme.titleMedium),
+                SizedBox(height: 20),
                 CachedNetworkImage(
                   imageUrl: widget.questionData.imageSource,
                   placeholder: (context, url) => const CircularProgressIndicator(),
@@ -381,6 +401,7 @@ class QuizSelectorWidget extends StatefulWidget{
 class _quizSelectorState extends State<QuizSelectorWidget>{
   List<Widget> answersWidgetsCache = [];
   List<bool> answersStates = [];
+  ScrollController scrollController = ScrollController();
 
   @override
   void initState() {
@@ -437,6 +458,10 @@ class _quizSelectorState extends State<QuizSelectorWidget>{
   @override
   Widget build(BuildContext context) {
     return Scrollbar(
+      thickness: 5,
+      thumbVisibility: true,
+      interactive: true,
+      radius: Radius.circular(10),
       child: ListView.builder(
         padding: EdgeInsets.all(20),
         itemCount: answersWidgetsCache.length,
@@ -444,7 +469,7 @@ class _quizSelectorState extends State<QuizSelectorWidget>{
           return Column(
             children: [
               answersWidgetsCache[index],
-              SizedBox(height: 20)
+              SizedBox(height: 15)
             ],
           );
         },
@@ -477,18 +502,18 @@ class AnswerWidget extends StatelessWidget{
           )
         ),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(answerDTO.answerText, style: Theme.of(context).textTheme.titleMedium),
-            Container(
+            Expanded(child: Text(answerDTO.answerText, style: Theme.of(context).textTheme.bodyMedium)),
+            AnimatedContainer(
+              duration: Duration(milliseconds: 200),
               decoration: ShapeDecoration(
                 color: isSelected ? Colors.white : Colors.black,
-                shape: ContinuousRectangleBorder(
-                  borderRadius: isCheckbox ? BorderRadius.circular(10) : BorderRadius.circular(1000)
-                )
+                shape: isCheckbox ? ContinuousRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10))) : CircleBorder(),
               ),
               child: SizedBox(height: 30, width: 30),
-            )
+            ),
           ],),
       ),
     );
@@ -526,7 +551,7 @@ class TestModalSheet extends StatelessWidget{
         ),
         child: Column(
           children: [
-            Text("Вопросы теста", style: TextStyle(fontSize: 20, color: Colors.black)),
+            Text("Вопросы теста", style: TextStyle(fontSize: 25, color: Colors.black)),
             Expanded(
               child: Scrollbar(
                 thickness: 5,
@@ -544,46 +569,47 @@ class TestModalSheet extends StatelessWidget{
                           )
                         ),
                         child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             // Номер вопроса
                             isAnswered(index) ?
                             Container(
-                              padding: EdgeInsets.all(10),
+                              padding: EdgeInsets.all(6),
                               decoration: ShapeDecoration(
                                 color: Colors.green,
                                 shape: ContinuousRectangleBorder(
-                                  borderRadius: BorderRadius.all(Radius.circular(30))
+                                  borderRadius: BorderRadius.all(Radius.circular(20))
                                 )
                               ),
                               child: Row(
                                 children: [
                                   Text(questionsMeta[index].questionSequence.toString(), style: TextStyle(color: Colors.black)),
                                   SizedBox(width: 10),
-                                  Image.asset('assets/icons/crown-icon.png')
+                                  Icon(Icons.check)
                                 ],
                               ),
                             ) :
                             Container(
-                              padding: EdgeInsets.all(10),
+                              padding: EdgeInsets.all(6),
                               decoration: ShapeDecoration(
                                 color: const Color.fromARGB(255, 129, 166, 131),
                                 shape: ContinuousRectangleBorder(
-                                  borderRadius: BorderRadius.all(Radius.circular(30))
+                                  borderRadius: BorderRadius.all(Radius.circular(20))
                                 )
                               ),
                               child: Row(
                                 children: [
                                   Text(questionsMeta[index].questionSequence.toString(), style: TextStyle(color: Colors.black)),
                                   SizedBox(width: 10),
-                                  Image.asset('assets/icons/test-icon.png')
+                                  Icon(Icons.close)
                                 ],
                               ),
                             ),
                             // Текст вопроса
                             Expanded(
                               child: Container(
-                                padding: EdgeInsets.all(10),
-                                child: Text(questionsMeta[index].questionText, style: TextStyle(color: Colors.black)),
+                                padding: EdgeInsets.symmetric(horizontal: 15),
+                                child: Text(questionsMeta[index].questionText, style: TextStyle(color: Colors.black, fontSize: 20)),
                               ),
                             ),
                             ElevatedButton(

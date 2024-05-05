@@ -1,22 +1,29 @@
 import 'dart:convert';
 
 import 'package:animations/animations.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:finflex/api/tests-api.dart';
 import 'package:finflex/education/dto/test-dto.dart';
 import 'package:finflex/education/pages/test-proccess-page.dart';
 import 'package:finflex/handles/data-widgets/profile-data-widget.dart';
 import 'package:finflex/profile/dto/profile-app-data.dart';
+import 'package:finflex/styles/card-colors.dart';
 import 'package:finflex/styles/colors.dart';
+import 'package:finflex/styles/decorations.dart';
 import 'package:finflex/styles/text-styles.dart';
+import 'package:finflex/styles/themes.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_svg/svg.dart';
 
 class ChapterTestsPage extends StatefulWidget {
   final int chapterId;
   final String chapterDescription;
   final Function refreshCallBack;
+  final Color barColor;
 
-  const ChapterTestsPage({super.key, required this.chapterId, required this.chapterDescription, required this.refreshCallBack});
+  const ChapterTestsPage({super.key, required this.chapterId, required this.chapterDescription, required this.refreshCallBack, required this.barColor});
 
   @override
   _ChapterTestsPageState createState() => _ChapterTestsPageState();
@@ -64,8 +71,12 @@ class _ChapterTestsPageState extends State<ChapterTestsPage>
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        backgroundColor: ColorStyles.mainBackgroundColor,
         appBar: AppBar(
-          title: Text("Тесты"),
+          centerTitle: true,
+          foregroundColor: Colors.white,
+          backgroundColor: widget.barColor,
+          title: Text("Тесты выбранной главы"),
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
             onPressed: () {
@@ -74,32 +85,51 @@ class _ChapterTestsPageState extends State<ChapterTestsPage>
             },
           ),
         ),
-        body: Column(
-          children: [
-            Text(widget.chapterDescription, style: TextStyle(color: Colors.black),),
-            Expanded(
-              child: FutureBuilder(
-                  future: loadTests(
-                      widget.chapterId, AppProcessDataProvider.of(context)!.profileData),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: const CircularProgressIndicator());
-                    } else if (snapshot.hasError) {
-                      return Text('Ошибка ${snapshot.error}');
-                    } else {
-                      return FadeTransition(
-                        opacity: _animation,
-                        child: ListView.builder(
-                            itemCount: snapshot.data!.length,
-                            itemBuilder: (context, index) {
-                              return TestCard(
-                                  testData: snapshot.data![index], testIndex: index, refreshCallBack: (){widget.refreshCallBack(); setState(() {});});
-                            }),
-                      );
-                    }
-                  }),
-            ),
-          ],
+        body: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(widget.chapterDescription, style: Theme.of(context).textTheme.bodyLarge),
+              SizedBox(height: 20),
+              Text("Тесты", style: Theme.of(context).textTheme.headlineLarge),
+              Expanded(
+                child: Scrollbar(
+                  thickness: 5,
+                  thumbVisibility: true,
+                  interactive: true,
+                  radius: Radius.circular(20),
+                  child: Expanded(
+                    child: FutureBuilder(
+                        future: loadTests(
+                            widget.chapterId, AppProcessDataProvider.of(context)!.profileData),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState == ConnectionState.waiting) {
+                            return Center(child: const CircularProgressIndicator());
+                          } else if (snapshot.hasError) {
+                            return Text('Ошибка ${snapshot.error}');
+                          } else {
+                            return FadeTransition(
+                              opacity: _animation,
+                              child: ListView.builder(
+                                  itemCount: snapshot.data!.length,
+                                  itemBuilder: (context, index) {
+                                    return Column(
+                                      children: [
+                                        TestCard(
+                                            testData: snapshot.data![index], testIndex: index, refreshCallBack: (){widget.refreshCallBack(); setState(() {});}),
+                                        SizedBox(height: 10)
+                                      ],
+                                    );
+                                  }),
+                            );
+                          }
+                        }),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -110,13 +140,16 @@ class TestCard extends StatelessWidget {
   final TestDTO testData;
   final int testIndex;
   final Function refreshCallBack;
-  const TestCard(
-      {super.key, required this.testData, required this.testIndex, required this.refreshCallBack});
+  late TestColor colorSet;
+
+  TestCard({super.key, required this.testData, required this.testIndex, required this.refreshCallBack}){
+    colorSet = TestCardColors.GetColorByIndex(testIndex);
+  }
 
   void onTestClick(BuildContext context){
     Navigator.of(context).push(
       MaterialPageRoute(builder: 
-        (context)=>TestPage(testId: testData.testId, refreshCallBack: refreshCallBack)
+        (context)=> Theme(data: CustomThemes.testTheme, child: TestPage(testId: testData.testId, refreshCallBack: refreshCallBack))
       )
     );
   }
@@ -124,16 +157,51 @@ class TestCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if(!testData.isUnlocked){
-      return Container(
-        color: Colors.black,
-        child: Text('Тест ${testData.title} заблокирован, ты лох'));
+      return Card(
+        color: colorSet.borderColor,
+        shape: CustomDecorations.OuterEducationCardShape,
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              CachedNetworkImage(
+                imageUrl: testData.imageSource,
+                placeholder: (context, url) => const CircularProgressIndicator(),
+                imageBuilder: (context, imageProvider){
+                  return Container(
+                    height: 100,
+                    width: 200,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(image: imageProvider, fit: BoxFit.fitHeight)
+                    )
+                  );
+                }),
+              Container(
+                decoration: ShapeDecoration(
+                  shape: CustomDecorations.InnerEducationCardShape,
+                  color: colorSet.blockedColor
+                ),
+                padding: EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    SvgPicture.asset('assets/icons/lock-icon.svg', fit: BoxFit.fitHeight),
+                    SizedBox(width: 20),
+                    Expanded(child: Text('Тест "${testData.title}" заблокирован', style: Theme.of(context).textTheme.bodyMedium,)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        )
+      );
     }
     return Theme(
-      data: Theme.of(context).copyWith(textTheme: CustomTextThemes.TestTextTheme),
+      data: Theme.of(context).copyWith(textTheme: CustomTextThemes.TestsTextTheme),
       child: GestureDetector(
           onTap:() {onTestClick(context);},
           child: Card(
-              color: Colors.blue,
+              color: colorSet.backgroundColor,
               shape: ContinuousRectangleBorder(
                 side: BorderSide(width: 8),
                 borderRadius: BorderRadius.circular(40),
@@ -142,24 +210,26 @@ class TestCard extends StatelessWidget {
                 padding: const EdgeInsets.all(15),
                 child: Row(
                   children: [
-                    Container(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text('Тест ${testIndex + 1}', style: Theme.of(context).textTheme.labelLarge),
-                              Text(' · '),
-                              Text(
-                                '${testData.questionsCount} вопросов', style: Theme.of(context).textTheme.labelSmall
-                              )
-                          ]),
-                          Text(testData.title, style: Theme.of(context).textTheme.titleLarge)
-                        ],),
+                    Expanded(
+                      child: Container(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text('Тест ${testIndex + 1}', style: Theme.of(context).textTheme.labelLarge!.copyWith(color: colorSet.metaColor)),
+                                Text(' · ', style: Theme.of(context).textTheme.labelMedium!.copyWith(color: colorSet.metaColor)),
+                                Text(
+                                  '${testData.questionsCount} вопросов', style: Theme.of(context).textTheme.labelSmall!.copyWith(color: colorSet.metaColor)
+                                )
+                            ]),
+                            Text(testData.title, style: Theme.of(context).textTheme.titleMedium!.copyWith(color: colorSet.titleColor))
+                          ],),
+                      ),
                     ),
                     Container(
+                      padding: EdgeInsets.all(10),
                       decoration: const ShapeDecoration(
-                        color: ColorStyles.testPassedColor,
                         shape: ContinuousRectangleBorder(
                           side: BorderSide(width: 2),
                           borderRadius: BorderRadius.all(Radius.circular(20))
@@ -168,8 +238,8 @@ class TestCard extends StatelessWidget {
                       child: Column(
                         children: [
                           Container(
-                            decoration: const ShapeDecoration(
-                              color: ColorStyles.testPassedColor,
+                            decoration: ShapeDecoration(
+                              color: testData.isPassed ? ColorStyles.testPassedColor : ColorStyles.testNotPassedColor,
                               shape: ContinuousRectangleBorder(
                                 borderRadius: BorderRadius.all(Radius.circular(20))
                               )
@@ -177,14 +247,14 @@ class TestCard extends StatelessWidget {
                             padding: EdgeInsets.all(10),
                             child: Row(
                               children: [
-                                Text(testData.isPassed ? 'Пройден' : 'Не пройден', style: Theme.of(context).textTheme.labelMedium),
-                                testData.isPassed ? Image.asset('assets/icons/success-icon.png') : Container()
+                                Text(testData.isPassed ? 'Пройден' : 'Не пройден', style: Theme.of(context).textTheme.labelMedium!.copyWith(color: const Color.fromARGB(120, 0, 0, 0))),
+                                testData.isPassed ? Icon(Icons.check) : Container()
                               ],),
                           ),
                           Row(
                             children: [
-                              Text('${testData.userScore}/${testData.maxScore}'),
-                              Image.asset('assets/icons/crown-icon.png')
+                              Text('${testData.userScore}/${testData.maxScore}', style: Theme.of(context).textTheme.labelMedium!.copyWith(color: ColorStyles.testScoreColor)),
+                              SvgPicture.asset('assets/icons/crown-icon.svg', width: 30)
                             ],
                           )
                       ],),

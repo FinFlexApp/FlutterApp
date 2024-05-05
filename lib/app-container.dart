@@ -25,7 +25,7 @@ class _finFlexAppState extends State<FinFlexApp>{
 
   @override
   void initState() {
-    setPageIndex(0);
+    setPageIndex(1);
     super.initState();
   }
 
@@ -70,13 +70,15 @@ class _finFlexAppState extends State<FinFlexApp>{
   Widget build(BuildContext context) {
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 14, 22, 33),
-      
+      backgroundColor: ColorStyles.mainBackgroundColor,
       body: SafeArea(child: Padding(
         padding: const EdgeInsets.all(20),
         child: pageSelector(currentPageIndex),
       )),
       appBar: AppBar(
+        bottomOpacity: 0,
+        automaticallyImplyLeading: false,
+        leading: null,
         centerTitle: true,
         title: Container(
         padding: EdgeInsets.all(10),
@@ -95,8 +97,8 @@ class _finFlexAppState extends State<FinFlexApp>{
             shape: ContinuousRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(40)))
           ),
           child: BottomNavigationBar(
-            backgroundColor: Color.fromARGB(255, 34, 58, 88),
-            selectedItemColor: Colors.green,
+            //backgroundColor: Color.fromARGB(255, 34, 58, 88),
+            selectedItemColor: const Color.fromARGB(255, 255, 255, 255),
             currentIndex: currentPageIndex,
             onTap: setPageIndex,
             items: [
@@ -117,7 +119,7 @@ class _finFlexAppState extends State<FinFlexApp>{
                 label: 'Лидеры',
               ),
               BottomNavigationBarItem(
-                icon: Image.asset('assets/icons/leader-nav-icon.png'),
+                icon: Icon(Icons.account_circle_outlined),
                 label: 'Профиль',
               ),
             ],

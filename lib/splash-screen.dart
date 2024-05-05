@@ -8,6 +8,7 @@ import 'package:finflex/education/pages/chapters-page.dart';
 import 'package:finflex/handles/data-widgets/profile-data-widget.dart';
 import 'package:finflex/profile/dto/profile-app-data.dart';
 import 'package:finflex/profile/profile-handles/profile-prefs-handlers.dart';
+import 'package:finflex/styles/themes.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -26,7 +27,7 @@ class _splashScreenState extends State<SplashScreen> {
     if(cachedProfileData.token == null || cachedProfileData.userId == null) return false;
 
     var request = await AuthApiService.CheckToken(cachedProfileData.userId!, cachedProfileData.token!);
-    //await Future.delayed(Duration(seconds: 3));
+    await Future.delayed(Duration(seconds: 1));
     return json.decode(request.body)['check'];
   }
 
@@ -61,16 +62,17 @@ class _splashScreenState extends State<SplashScreen> {
               MaterialPageRoute(builder: (context) => FinFlexApp()),
             );
           });
-          return Text("Успешно!");
+          return Container();
         } else {
-          // Defer navigation after the build is complete
           WidgetsBinding.instance!.addPostFrameCallback((_) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => WelcomePage()),
+              MaterialPageRoute(builder: (context) => Theme(
+                data: CustomThemes.mainTheme,
+                child: WelcomePage())),
             );
           });
-          return Text("Необходимо войти!");
+          return Container();
         }
       }
     },

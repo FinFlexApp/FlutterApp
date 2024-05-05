@@ -9,6 +9,7 @@ import 'package:finflex/education/dto/chapter-dto.dart';
 import 'package:finflex/education/dto/chapter-test-dto.dart';
 import 'package:finflex/education/dto/question-dto.dart';
 import 'package:finflex/handles/data-widgets/profile-data-widget.dart';
+import 'package:finflex/handles/pages/debug-page.dart';
 import 'package:finflex/news/dto/news-dto.dart';
 import 'package:finflex/education/dto/question-meta-dto.dart';
 import 'package:finflex/education/pages/chapters-page.dart';
@@ -17,6 +18,7 @@ import 'package:finflex/splash-screen.dart';
 import 'package:finflex/styles/button-styles.dart';
 import 'package:finflex/styles/snackbar-styles.dart';
 import 'package:finflex/styles/text-styles.dart';
+import 'package:finflex/styles/themes.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -40,12 +42,7 @@ class MyApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Flutter HTTP Demo',
-        theme: ThemeData(
-          highlightColor: Colors.blue,
-          textTheme: CustomTextThemes.MainTextTheme,
-          snackBarTheme: CustomSnackbarThemes.MainSnackbarTheme,
-          primarySwatch: Colors.blue,
-        ),
+        theme: CustomThemes.mainTheme,
         home: SplashScreen()
       ),
     );

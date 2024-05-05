@@ -153,14 +153,16 @@ class _messageInputsState extends State<MessageInputsWidget> {
             child: TextField(
               style: Theme.of(context).textTheme.labelLarge,
               controller: _controller,
-              decoration: CustomDecorations.MainInputDecoration('Напишите сообщение...')
+              decoration: CustomDecorations.MainInputDecoration('Напишите сообщение...', true)
               ),
           ),
           const SizedBox(width: 20),
           ElevatedButton(
             style: ButtonStyles.mainButtonStyle,
             onPressed: sendMessageInvoker,
-            child: Image.asset('assets/icons/bot-nav-icon.png'))
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 20, horizontal: 5),
+              child: Icon(Icons.message)))
         ],
       ),
     );

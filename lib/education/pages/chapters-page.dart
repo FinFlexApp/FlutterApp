@@ -13,6 +13,7 @@ import 'package:finflex/styles/themes.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ChaptersPage extends StatefulWidget{
   @override
@@ -101,7 +102,7 @@ class ChapterCard extends StatelessWidget {
   void onChapterClick(BuildContext context){
     Navigator.of(context).push(
       MaterialPageRoute(builder: 
-        (context)=>ChapterTestsPage(chapterId: chapterData.chapterId, chapterDescription: chapterData.description, refreshCallBack: refreshCallBack)
+        (context)=>ChapterTestsPage(chapterId: chapterData.chapterId, chapterDescription: chapterData.description, refreshCallBack: refreshCallBack, barColor: colorSet.backgroundColor)
       )
     );
   }
@@ -115,21 +116,39 @@ class ChapterCard extends StatelessWidget {
         shape: CustomDecorations.OuterEducationCardShape,
         child: Padding(
           padding: const EdgeInsets.all(4),
-          child: Container(
-            decoration: ShapeDecoration(
-              shape: CustomDecorations.InnerEducationCardShape,
-              color: colorSet.blockedColor
-            ),
-            padding: EdgeInsets.all(40),
-            child: Row(
-              children: [
-                Image.asset('assets/icons/crown-icon.png'),
-                Expanded(child: Text('Глава "${chapterData.title}" заблокирована')),
-              ],
-            ),
+          child: Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              CachedNetworkImage(
+                imageUrl: chapterData.imageSource,
+                placeholder: (context, url) => const CircularProgressIndicator(),
+                imageBuilder: (context, imageProvider){
+                  return Container(
+                    height: 100,
+                    width: 200,
+                    decoration: BoxDecoration(
+                      image: DecorationImage(image: imageProvider, fit: BoxFit.fitHeight)
+                    )
+                  );
+                }),
+              Container(
+                decoration: ShapeDecoration(
+                  shape: CustomDecorations.InnerEducationCardShape,
+                  color: colorSet.blockedColor
+                ),
+                padding: EdgeInsets.all(20),
+                child: Row(
+                  children: [
+                    SvgPicture.asset('assets/icons/lock-icon.svg', fit: BoxFit.fitHeight),
+                    SizedBox(width: 20),
+                    Expanded(child: Text('Глава "${chapterData.title}" заблокирована')),
+                  ],
+                ),
+              ),
+            ],
           ),
         )
-        );
+      );
     }
     
     return OpenContainer(
@@ -141,7 +160,7 @@ class ChapterCard extends StatelessWidget {
             ),
       closedShape: CustomDecorations.OuterEducationCardShape,
       transitionType: ContainerTransitionType.fade,
-      openBuilder: (contexto, action)=> ChapterTestsPage(chapterId: chapterData.chapterId, chapterDescription: chapterData.description, refreshCallBack: refreshCallBack),
+      openBuilder: (contexto, action)=> Theme(data: CustomThemes.testsPageTheme, child: ChapterTestsPage(chapterId: chapterData.chapterId, chapterDescription: chapterData.description, refreshCallBack: refreshCallBack, barColor: colorSet.backgroundColor)),
       closedBuilder: (context, openContainer) => GestureDetector(
         onTap: openContainer,
         child: Card(
@@ -167,44 +186,46 @@ class ChapterCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Глава ${chapterIndex + 1}', style: Theme.of(context).textTheme.labelMedium),
+                        Text('Глава ${chapterIndex + 1}', style: Theme.of(context).textTheme.labelMedium!.copyWith(color: colorSet.metaColor)),
                         Text(chapterData.title, style: Theme.of(context).textTheme.titleMedium),
-                        Row(
-                          children: [
-                            Container(
-                              decoration: CustomDecorations.progressDataDecoration,
-                              padding: EdgeInsets.all(5),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          child: Row(
+                            children: [
+                              Container(
+                                decoration: CustomDecorations.progressDataDecoration,
+                                padding: EdgeInsets.all(5),
+                                  child: Row(
+                                children: [
+                                  Text(
+                                      '${chapterData.passedTests}/${chapterData.testsCount}',
+                                      style: Theme.of(context).textTheme.displayMedium),
+                                      SizedBox(width: 10),
+                                  SizedBox(
+                                      width: 30,
+                                      height: 30,
+                                      child: SvgPicture.asset("assets/icons/test-icon.svg", fit: BoxFit.contain))
+                                ],
+                              )),
+                              SizedBox(width: 10),
+                              Container(
+                                decoration: CustomDecorations.progressDataDecoration,
+                                padding: EdgeInsets.all(5),
                                 child: Row(
-                              children: [
-                                Text(
-                                    '${chapterData.passedTests}/${chapterData.testsCount}',
-                                    style: Theme.of(context).textTheme.displayMedium),
-                                    SizedBox(width: 10),
-                                SizedBox(
-                                    width: 30,
-                                    height: 30,
-                                    child: Image.asset("assets/icons/test-icon.png", fit: BoxFit.contain))
-                              ],
-                            )),
-                            SizedBox(width: 10),
-                            Container(
-                              decoration: CustomDecorations.progressDataDecoration,
-                              padding: EdgeInsets.all(5),
-                              child: Row(
-                              children: [
-                                Text(chapterData.chapterScore.toString(),
-                                style: Theme.of(context).textTheme.displayMedium),
-                                SizedBox(width: 10),
-                                SizedBox(
-                                    width: 30,
-                                    height: 30,
-                                    child: Image.asset("assets/icons/crown-icon.png", fit: BoxFit.contain))
-                              ],
-                            )
-                            ),
-                          ],
+                                children: [
+                                  Text(chapterData.chapterScore.toString(),
+                                  style: Theme.of(context).textTheme.displayMedium),
+                                  SizedBox(width: 10),
+                                  SizedBox(
+                                      width: 30,
+                                      height: 30,
+                                      child: SvgPicture.asset("assets/icons/crown-icon.svg", fit: BoxFit.contain))
+                                ],
+                              )
+                              ),
+                            ],
+                          ),
                         ),
-                        SizedBox(height: 10),
                         Text(chapterData.description, style: Theme.of(context).textTheme.bodyMedium)
                       ],
                     )),

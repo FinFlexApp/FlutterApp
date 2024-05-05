@@ -10,6 +10,8 @@ import 'package:finflex/profile/dto/profile-app-data.dart';
 import 'package:finflex/styles/colors.dart';
 import 'package:finflex/styles/text-styles.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter_svg/svg.dart';
 
 class LeaderBoardPage extends StatelessWidget {
   const LeaderBoardPage({super.key});
@@ -133,7 +135,7 @@ class LeaderCard extends StatelessWidget {
                                           .textTheme
                                           .displayLarge),
                                   SizedBox(width: 10),
-                                  Image.asset('assets/icons/crown-icon.png')
+                                  SvgPicture.asset('assets/icons/crown-icon.svg', height: 25)
                                 ],
                               ),
                             ),
@@ -152,7 +154,7 @@ class LeaderCard extends StatelessWidget {
                                           .textTheme
                                           .displayLarge),
                                   SizedBox(width: 10),
-                                  Image.asset('assets/icons/test-icon.png')
+                                  SvgPicture.asset('assets/icons/test-icon.svg', height: 25)
                                 ],
                               ),
                             )
@@ -229,7 +231,7 @@ class LeaderCard extends StatelessWidget {
                                           .textTheme
                                           .displayLarge),
                                   SizedBox(width: 10),
-                                  Image.asset('assets/icons/crown-icon.png')
+                                  SvgPicture.asset('assets/icons/crown-icon.svg', height: 25)
                                 ],
                               ),
                             ),
@@ -248,7 +250,7 @@ class LeaderCard extends StatelessWidget {
                                           .textTheme
                                           .displayLarge),
                                   SizedBox(width: 10),
-                                  Image.asset('assets/icons/test-icon.png')
+                                  SvgPicture.asset('assets/icons/test-icon.svg', height: 25)
                                 ],
                               ),
                             )
@@ -324,7 +326,7 @@ class LeaderCard extends StatelessWidget {
                                           .textTheme
                                           .displayLarge),
                                   SizedBox(width: 10),
-                                  Image.asset('assets/icons/crown-icon.png')
+                                  SvgPicture.asset('assets/icons/crown-icon.svg', height: 25)
                                 ],
                               ),
                             ),
@@ -343,7 +345,7 @@ class LeaderCard extends StatelessWidget {
                                           .textTheme
                                           .displayLarge),
                                   SizedBox(width: 10),
-                                  Image.asset('assets/icons/test-icon.png')
+                                  SvgPicture.asset('assets/icons/test-icon.svg', height: 25)
                                 ],
                               ),
                             )
@@ -378,7 +380,7 @@ class LeaderCard extends StatelessWidget {
                           Text(leaderData.score.toString(),
                               style: Theme.of(context).textTheme.displayLarge),
                           SizedBox(width: 10),
-                          Image.asset('assets/icons/crown-icon.png')
+                          SvgPicture.asset('assets/icons/crown-icon.svg', height: 25)
                         ],
                       ),
                     ),
@@ -395,7 +397,7 @@ class LeaderCard extends StatelessWidget {
                           Text(leaderData.testsPassed.toString(),
                               style: Theme.of(context).textTheme.displayLarge),
                           SizedBox(width: 10),
-                          Image.asset('assets/icons/test-icon.png')
+                          SvgPicture.asset('assets/icons/test-icon.svg', height: 25)
                         ],
                       ),
                     )

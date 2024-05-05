@@ -6,28 +6,28 @@ class ChapterCardColors{
   static final Map<String, ChapterColor> ColorsMap = {
     'black': ChapterColor(
       titleColor: const Color.fromARGB(255, 0, 0, 0),
-      metaColor: const Color.fromARGB(128, 0, 0, 0),
+      metaColor: Color.fromARGB(255, 210, 210, 210),
       borderColor: const Color.fromARGB(255, 0, 0, 0),
       blockedColor: const Color.fromARGB(199, 40, 40, 40),
       backgroundColor: const Color.fromARGB(255, 29, 26, 26)
     ),
     'blue': ChapterColor(
       titleColor: const Color.fromARGB(255, 3, 0, 167),
-      metaColor: const Color.fromARGB(128, 3, 0, 167),
+      metaColor: Color.fromARGB(255, 187, 186, 255),
       borderColor: const Color.fromARGB(255, 3, 0, 167),
       blockedColor: const Color.fromARGB(199, 1, 0, 70),
       backgroundColor: const Color.fromARGB(255, 34, 23, 100)
     ),
     'red': ChapterColor(
       titleColor: const Color.fromARGB(255, 167, 0, 0),
-      metaColor: const Color.fromARGB(128, 167, 0, 0),
+      metaColor: Color.fromARGB(255, 255, 190, 190),
       borderColor: const Color.fromARGB(255, 167, 0, 0),
       blockedColor: const Color.fromARGB(199, 70, 0, 0),
       backgroundColor: const Color.fromARGB(255, 100, 30, 30)
     ),
     'green': ChapterColor(
       titleColor: const Color.fromARGB(255, 3, 167, 0),
-      metaColor: const Color.fromARGB(128, 3, 167, 0),
+      metaColor: Color.fromARGB(255, 193, 255, 192),
       borderColor: const Color.fromARGB(255, 3, 167, 0),
       blockedColor: const Color.fromARGB(200, 1, 40, 0),
       backgroundColor: const Color.fromARGB(255, 30, 100, 30)),
@@ -57,28 +57,29 @@ class TestCardColors{
       metaColor: const Color.fromARGB(128, 0, 0, 0),
       borderColor: const Color.fromARGB(255, 0, 0, 0),
       blockedColor: const Color.fromARGB(199, 40, 40, 40),
-      backgroundColor: const Color.fromARGB(255, 29, 26, 26)
+      backgroundColor: Colors.white
     ),
     'blue': TestColor(
       titleColor: const Color.fromARGB(255, 3, 0, 167),
       metaColor: const Color.fromARGB(128, 3, 0, 167),
       borderColor: const Color.fromARGB(255, 3, 0, 167),
       blockedColor: const Color.fromARGB(199, 1, 0, 70),
-      backgroundColor: const Color.fromARGB(255, 34, 23, 100)
+      backgroundColor: Colors.white
     ),
     'red': TestColor(
       titleColor: const Color.fromARGB(255, 167, 0, 0),
       metaColor: const Color.fromARGB(128, 167, 0, 0),
       borderColor: const Color.fromARGB(255, 167, 0, 0),
       blockedColor: const Color.fromARGB(199, 70, 0, 0),
-      backgroundColor: const Color.fromARGB(255, 100, 30, 30)
+      backgroundColor: Colors.white
     ),
     'green': TestColor(
       titleColor: const Color.fromARGB(255, 3, 167, 0),
       metaColor: const Color.fromARGB(128, 3, 167, 0),
       borderColor: const Color.fromARGB(255, 3, 167, 0),
       blockedColor: const Color.fromARGB(200, 1, 40, 0),
-      backgroundColor: const Color.fromARGB(255, 30, 100, 30)),
+      backgroundColor: Colors.white
+    )
   };
 
   static TestColor GetColorByIndex(int index){

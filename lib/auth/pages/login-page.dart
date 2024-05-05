@@ -7,7 +7,9 @@ import 'package:finflex/handles/data-widgets/profile-data-widget.dart';
 import 'package:finflex/profile/dto/profile-app-data.dart';
 import 'package:finflex/profile/profile-handles/profile-prefs-handlers.dart';
 import 'package:finflex/styles/button-styles.dart';
+import 'package:finflex/styles/colors.dart';
 import 'package:finflex/styles/decorations.dart';
+import 'package:finflex/styles/text-styles.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -21,10 +23,13 @@ class _loginPageState extends State<LoginPage> {
   bool loginProcessing = false;
   bool shownPassword = false;
 
-  bool isValidated = true;
+  String validationMessage = '';
 
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
+
+  bool passwordValidated = true;
+  bool emailValidated = true;
 
   Future<LoginResponseDTO> sendLoginData(String email, String password) async{
 
@@ -34,10 +39,50 @@ class _loginPageState extends State<LoginPage> {
     return loginResponse;
   }
 
+  String validateData(String email, String password){
+    final RegExp emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
+    if (!emailRegex.hasMatch(email)) {
+      setState(() {
+        emailValidated = false;
+      });
+      return "Ошибка валидации : введен некорректный E-Mail адрес";
+    } else {
+      setState(() {
+        emailValidated = true;
+      });
+    }
+    if (password.isEmpty) {
+      setState(() {
+        emailValidated = false;
+      });
+      return "Ошибка валидации : не введен пароль";
+    } else {
+      setState(() {
+        emailValidated = true;
+      });
+    }
+
+    if (password.length < 8) {
+      setState(() {
+        emailValidated = false;
+      });
+      return "Ошибка валидации : введенный пароль содержит менее 8 символов";
+    } else {
+      setState(() {
+        emailValidated = true;
+      });
+    }
+
+    return '';
+  }
+
   void loginHandler(BuildContext context, String email, String password) async{
     setState(() {
       loginProcessing = true;
     });
+
+    validationMessage = validateData(email, password);
+    if(validationMessage.isNotEmpty) return;
 
     var loginResponse = await sendLoginData(email, password);
 
@@ -55,7 +100,7 @@ class _loginPageState extends State<LoginPage> {
     }
     else{
       setState(() {
-        isValidated = false;
+        validationMessage = "Ошибка сервера : пользователя со введёнными данными не существует";
       });
     }
 
@@ -67,52 +112,70 @@ class _loginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor:ColorStyles.mainBackgroundColor,
       appBar: AppBar(
+        backgroundColor: ColorStyles.appBarMainColor,
         title: Text('Вход'),
       ),
       body: SingleChildScrollView(
-        padding: EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: <Widget>[
-            TextFormField(
-              controller: emailController,
-              decoration: CustomDecorations.MainInputDecoration('E-Mail адрес'),
-              keyboardType: TextInputType.emailAddress,
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: passwordController,
-                    decoration: CustomDecorations.MainInputDecoration('Пароль'),
-                    obscureText: shownPassword,
-                  ),
-                ),
-                ElevatedButton(
-                  onPressed: (){
-                  setState(() {
-                    shownPassword = !shownPassword;
-                  });
-                  },
-                  child: shownPassword ? Image.asset('assets/icons/bot-nav-icon.png') : Image.asset('assets/icons/crown-icon.png')
-                  )
-              ],
-            ),
-            SizedBox(height: 20.0),
-            Container(
-              color: Colors.black,
-              child: !isValidated ? Text("Что-то пошло не так") : Text("Все норм"),
-            ),
-            ElevatedButton(
-              style: ButtonStyles.mainButtonStyle,
-              onPressed: (){loginHandler(context, emailController.text, passwordController.text);},
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Text('Войти'),
+        child: Container(
+          padding: EdgeInsets.all(20),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(child: Text("Вход в аккаунт", style: Theme.of(context).textTheme.headlineLarge,)),
+              SizedBox(height: 30),
+              TextFormField(
+                style: CustomTextThemes.InputTextStyle,
+                controller: emailController,
+                decoration: CustomDecorations.MainInputDecoration('E-Mail адрес', emailValidated),
+                keyboardType: TextInputType.emailAddress,
               ),
-            )
-          ],
+              SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      style: CustomTextThemes.InputTextStyle,
+                      controller: passwordController,
+                      decoration: CustomDecorations.MainInputDecoration('Пароль', passwordValidated),
+                      obscureText: shownPassword,
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: (){
+                    setState(() {
+                      shownPassword = !shownPassword;
+                    });
+                    },
+                    style: ButtonStyles.visibilityButtonStyle,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      child: shownPassword ? Icon(Icons.visibility_off) : Icon(Icons.visibility),
+                    )
+                    )
+                ],
+              ),
+              SizedBox(height: 20),
+              Container(
+                padding: EdgeInsets.symmetric(vertical: 15),
+                child: validationMessage.isNotEmpty ? Container(
+                padding: EdgeInsets.all(10),
+                decoration: CustomDecorations.progressDataDecoration,
+                child: Text(validationMessage, style: TextStyle(color: Colors.red),),
+              ) : Container(),
+              ),
+              ElevatedButton(
+                style: ButtonStyles.mainButtonStyle,
+                onPressed: (){loginHandler(context, emailController.text, passwordController.text);},
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Text('Войти'),
+                ),
+              )
+            ],
+          ),
         ),
       ),
     );

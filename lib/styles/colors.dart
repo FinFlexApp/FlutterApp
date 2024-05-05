@@ -10,6 +10,8 @@ class ColorStyles{
   end: Alignment.centerRight,
   );
 
+  static const Color mainBackgroundColor = Color.fromARGB(255, 14, 22, 33);
+
   static const Color mainTextColor = Color.fromARGB(255, 255, 255, 255);
   static const Color metaTextColor = Color.fromARGB(128, 255, 255, 255);
   static const Color userMessageColor = Color.fromARGB(255, 43, 68, 102);
@@ -29,6 +31,7 @@ class ColorStyles{
 
 
   static const Color testPassedColor = Color.fromARGB(255, 148, 255, 128);
+  static const Color testNotPassedColor = Color.fromARGB(255, 203, 220, 200);
   static const Color testScoreColor = Color.fromARGB(255, 69, 54, 0);
 
   static const Color progressBarColor = Color.fromARGB(255, 39, 41, 98);
